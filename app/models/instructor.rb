@@ -1,46 +1,43 @@
 class Instructor
 
-  attr_accessor :name
+  attr_reader :name, :tests
 
   @@all = []
 
   def initialize(name)
     @name = name
     @@all << self
+    @tests = []
   end
 
   def self.all
     @@all
   end
 
-  def pass_student(student_name, test_name)
-    test = BoatingTest.all.find do |test|
-      test.name == test_name
+  # This is a helper method
+  def grade_student(student, test_name)
+    self.tests.find do |test|
+      test.student == student && test.test_name == test_name
     end
-    if test
-      student = test.student
-      if student.first_name == student_name
-        test.status = 'passed'
-      end
+  end
+  # End of helper method
+
+  def pass_student(student, test_name)
+    if self.grade_student(student, test_name).nil?
+      test = BoatingTest.new(student, test_name, 'passed', self)
     else
-      test = BoatingTest.new(Student.find_student(student_name), test_name, 'passed', self)
-      Student.find_student(student_name).boating_tests << test
+      test = self.grade_student(student, test_name)
+      test.status = 'passed'
     end
     test
   end
 
-  def fail_student(student_name, test_name)
-    test = BoatingTest.all.find do |test|
-      test.name == test_name
-    end
-    if test
-      student = test.student
-      if student.first_name == student_name
-        test.status = 'failed'
-      end
+  def fail_student(student, test_name)
+    if self.grade_student(student, test_name).nil?
+      test = BoatingTest.new(student, test_name, 'failed', self)
     else
-      test = BoatingTest.new(Student.find_student(student_name), test_name, 'failed', self)
-      Student.find_student(student_name).boating_tests << test
+      test = self.grade_student(student, test_name)
+      test.status = 'failed'
     end
     test
   end
